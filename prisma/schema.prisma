@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ آیتم‌ها (Items) ============
+model Item {
+  id            Int      @id @default(autoincrement())
+  name          String
+  nameEn        String?
+  quality       String   // poor | common | uncommon | rare | epic | legendary
+  slot          String?  // head | chest | legs | weapon | trinket | back | hands | feet | shoulders | wrist | neck | ring | off-hand | ranged
+  itemClass     String?  // armor | weapon | consumable | container | trade-goods | quest | misc
+  subclass      String?  // sword | axe | staff | plate | cloth | leather | mail ...
+  level         Int? // item level
+  requiredLevel Int?
+  bindsOn       String?  // pickup | equip | none
+  icon          String? // icon key (mapped client-side to emoji/svg)
+  description   String?
+  stats         String? // JSON: {"stamina": 21, "strength": 13}
+  sellPrice     Int? // in copper
+  stackable     Boolean  @default(false)
+  zoneId        Int?
+  createdAt     DateTime @default(now())
+
+  @@index([quality])
+  @@index([itemClass])
+  @@index([name])
+}
+
+// ============ موجودیت‌ها / NPC ها ============
+model Npc {
+  id             Int      @id @default(autoincrement())
+  name           String
+  nameEn         String?
+  type           String // humanoid | beast | dragonkin | elemental | undead | demon | giant | mechanical | aberration
+  classification String   @default("normal") // normal | elite | rare | rare-elite | world-boss | boss
+  minLevel       Int      @default(1)
+  maxLevel       Int      @default(1)
+  health         Int?
+  faction        String? // alliance | horde | neutral | hostile
+  reaction       String   @default("hostile") // hostile | friendly | neutral
+  zoneId         Int?
+  location       String?
+  icon           String?
+  description    String?
+  createdAt      DateTime @default(now())
+
+  @@index([type])
+  @@index([zoneId])
+  @@index([name])
+}
+
+// ============ لوت NPC ها ============
+model NpcDrop {
+  id      Int  @id @default(autoincrement())
+  npcId   Int
+  itemId  Int
+  chance  Float @default(0.25) // 0..1
+  mode    String @default("drop") // drop | quest-reward | vendor
+
+  @@index([npcId])
+  @@index([itemId])
+}
+
+// ============ کوئست‌ها (Quests) ============
+model Quest {
+  id            Int      @id @default(autoincrement())
+  title         String
+  titleEn       String?
+  requiredLevel Int      @default(1)
+  questLevel    Int?
+  type          String   @default("normal") // normal | dungeon | raid | daily | weekly | pvp | group
+  side          String   @default("both") // alliance | horde | both
+  giverNpcId    Int?
+  giverName     String?
+  zoneId        Int?
+  minRepFactionId Int?
+  experience    Int?
+  goldReward    Int?
+  description   String?
+  objectives    String? // JSON array: [{"text":"کشتار ۱۰ غول","count":10}]
+  rewards       String? // JSON: {"items":[ids], "choice":[ids]}
+  difficulty    String? // trivial | easy | normal | hard
+  createdAt     DateTime @default(now())
+
+  @@index([zoneId])
+  @@index([requiredLevel])
+  @@index([type])
+}
+
+// ============ مناطق (Zones) ============
+model Zone {
+  id          Int      @id @default(autoincrement())
+  name        String
+  nameEn      String?
+  continent   String // شرق‌سرزمین | کالیمدور | نوترند | پانداریا ...
+  type        String   @default("zone") // zone | dungeon | raid | battleground
+  minLevel    Int      @default(1)
+  maxLevel    Int      @default(10)
+  expansion   String   @default("classic") // classic | tbc | wotlk | cataclysm | mop | legion | bfa | shadowlands | dragonflight
+  faction     String   @default("both")
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+
+  @@index([continent])
+  @@index([type])
+}
+
+// ============ اسپل‌ها / قابلیت‌ها (Spells) ============
+model Spell {
+  id          Int      @id @default(autoincrement())
+  name        String
+  nameEn      String?
+  school      String? // fire | frost | shadow | arcane | nature | holy | physical
+  className   String? // واریر، مگ ...
+  spec        String?
+  requiredLevel Int    @default(1)
+  castTime    String? // "۲ ثانیه" | "بی‌درنگ"
+  cooldown    String?
+  range       String?
+  cost        String? // "۵٪ مانای پایه"
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  @@index([className])
+  @@index([school])
+}
+
+// ============ کلاس‌ها (Classes) ============
+model WowClass {
+  id          Int     @id @default(autoincrement())
+  name        String // واریر
+  nameEn      String // Warrior
+  role        String // تانک | دمیج | هیولر
+  armorType   String // پارچه‌پوش | چرم‌پوش | زره‌ای | ورق‌پوش
+  color       String  @default("#C79C6E") // class color hex
+  icon        String?
+  description String?
+  powerSource String? // خشم | مانا | انرژی | رونیک
+  createdAt   DateTime @default(now())
+}
+
+// ============ نژادها (Races) ============
+model Race {
+  id          Int     @id @default(autoincrement())
+  name        String // انسان
+  nameEn      String // Human
+  side        String // alliance | horde | both
+  startZone   String?
+  racialBonus String? // JSON
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+}
+
+// ============ جناح‌ها (Factions) ============
+model Faction {
+  id          Int     @id @default(autoincrement())
+  name        String
+  nameEn      String?
+  side        String  @default("both") // alliance | horde | both
+  zoneName    String?
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+}
+
+// ============ دستاوردها (Achievements) ============
+model Achievement {
+  id          Int     @id @default(autoincrement())
+  name        String
+  nameEn      String?
+  points      Int     @default(10)
+  category    String // questing | exploration | pvp | raid | profession | general
+  side        String  @default("both")
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+}
+
+// ============ اخبار (News) ============
+model News {
+  id          Int     @id @default(autoincrement())
+  title       String
+  slug        String  @unique
+  excerpt     String?
+  content     String
+  author      String  @default("تحریریه")
+  category    String  @default("اخبار") // اخبار | راهنما | پچ | گاید | کلاس
+  image       String?
+  views       Int     @default(0)
+  pinned      Boolean @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// ============ نظرات (Comments) ============
+model Comment {
+  id         Int      @id @default(autoincrement())
+  entityType String // item | npc | quest | zone | spell | news
+  entityId   Int
+  author     String   @default("مهمان")
+  body       String
+  rating     Int      @default(0) // -5 .. +5
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+// ============ کاربران (برای کامنت) ============
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String?  @unique
+  avatar    String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+}
