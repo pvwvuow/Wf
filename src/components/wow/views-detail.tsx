@@ -300,7 +300,7 @@ export function DetailView({ type, id, nav }: { type: EntityType; id: number; na
               {d.minLevel !== d.maxLevel ? `-${faNum(d.maxLevel as number)}` : ""}
             </Badge>
             <Badge color={sideColor(d.faction as string)}>
-              {SIDE_FA[d.faction as string] ?? (d.faction === "hostile" ? "خزنده" : (d.faction as string))}
+              {SIDE_FA[d.faction as string] ?? (d.faction === "hostile" ? "دشمن" : (d.faction as string))}
             </Badge>
           </>
         ))}

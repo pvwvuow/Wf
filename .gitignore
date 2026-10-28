@@ -57,3 +57,4 @@ server.log
 /db/
 download/
 scripts/*.png
+tool-results/

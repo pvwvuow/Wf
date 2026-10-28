@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Menu, Search as SearchIcon, Swords, X } from "lucide-react";
+import { BookMarked, Menu, Search as SearchIcon, Swords, X } from "lucide-react";
 import {
   SLUG_TO_TYPE,
   TYPE_PLURAL_FA,
@@ -12,12 +12,14 @@ import type { Nav } from "@/components/wow/views-list";
 import { ListView } from "@/components/wow/views-list";
 import { DetailView } from "@/components/wow/views-detail";
 import { HomeView, SearchView } from "@/components/wow/views-home";
+import { TermsView } from "@/components/wow/views-terms";
 
 type View =
   | { kind: "home" }
   | { kind: "list"; type: EntityType }
   | { kind: "detail"; type: EntityType; id: number }
-  | { kind: "search"; q: string };
+  | { kind: "search"; q: string }
+  | { kind: "terms" };
 
 function parseHash(): View {
   if (typeof window === "undefined") return { kind: "home" };
@@ -27,6 +29,7 @@ function parseHash(): View {
   const sp = new URLSearchParams(query ?? "");
   if (seg.length === 0) return { kind: "home" };
   if (seg[0] === "search") return { kind: "search", q: sp.get("q") ?? "" };
+  if (seg[0] === "terms") return { kind: "terms" };
   const t = SLUG_TO_TYPE[seg[0]];
   if (t) {
     if (seg[1] && Number.isFinite(Number(seg[1]))) {
@@ -47,6 +50,8 @@ function toHash(v: View): string {
       return `#/${TYPE_TO_SLUG[v.type]}/${v.id}`;
     case "search":
       return `#/search?q=${encodeURIComponent(v.q)}`;
+    case "terms":
+      return "#/terms";
   }
 }
 
@@ -124,6 +129,14 @@ export default function Page() {
 
             <div className="flex items-center gap-2 mr-auto">
               <button
+                onClick={() => nav({ kind: "terms" })}
+                className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-md border border-border bg-panel text-[12px] font-medium text-muted-foreground hover:text-gold hover:border-gold/50 transition-colors"
+                aria-label="راهنمای واژگان"
+              >
+                <BookMarked size={14} />
+                راهنمای واژگان
+              </button>
+              <button
                 onClick={() => nav({ kind: "search", q: "" })}
                 className="flex items-center justify-center w-9 h-9 rounded-md border border-border bg-panel text-muted-foreground hover:text-gold hover:border-gold/50 transition-colors"
                 aria-label="جستجو"
@@ -167,6 +180,7 @@ export default function Page() {
         {view.kind === "list" ? <ListView type={view.type} nav={nav} /> : null}
         {view.kind === "detail" ? <DetailView type={view.type} id={view.id} nav={nav} /> : null}
         {view.kind === "search" ? <SearchView q={view.q} nav={nav} /> : null}
+        {view.kind === "terms" ? <TermsView /> : null}
       </main>
 
       {/* فوتر */}
@@ -184,6 +198,12 @@ export default function Page() {
               </p>
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <button
+                onClick={() => nav({ kind: "terms" })}
+                className="text-xs text-gold hover:text-foreground transition-colors"
+              >
+                راهنمای واژگان
+              </button>
               {NAV_ITEMS.slice(0, 6).map((n) => (
                 <button
                   key={n.type}
